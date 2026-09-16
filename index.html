@@ -3,6 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    window.coi = {
+      coepCredentialless: () => true,
+      doReload: () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('coi-reload', Date.now());
+        window.location.replace(url.href);
+      }
+    };
+  </script>
   <script src="coi-serviceworker.min.js"></script>
   <title>SCAD Godot Web Demos</title>
   <style>
