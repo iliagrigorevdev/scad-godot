@@ -11,12 +11,16 @@
     .repo-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #e1e4ea; text-decoration: none; font-size: 0.9rem; font-weight: 500; background: #1a1d27; border: 1px solid #282c3c; border-radius: 6px; padding: 0.5rem 0.85rem; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
     .repo-link:hover { background: #232738; border-color: #478cbf; color: #00d2ff; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .card { background: #1a1d27; border: 1px solid #282c3c; border-radius: 8px; padding: 1.5rem; text-decoration: none; color: inherit; display: block; transition: transform 0.15s ease, border-color 0.15s ease; cursor: pointer; }
+    .card { position: relative; background: #1a1d27; border: 1px solid #282c3c; border-radius: 8px; padding: 1.5rem; color: inherit; display: flex; flex-direction: column; transition: transform 0.15s ease, border-color 0.15s ease; cursor: pointer; }
     .card:hover { transform: translateY(-3px); border-color: #478cbf; }
+    .card-link { text-decoration: none; color: inherit; display: block; }
+    .card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
     .card-img-container { width: 100%; aspect-ratio: 1 / 1; background: #0f1117; border-radius: 4px; margin-bottom: 1rem; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
     .card-img-container img { width: 100%; height: 100%; object-fit: contain; }
-    .card h2 { margin: 0 0 0.5rem 0; font-size: 1.25rem; color: #00d2ff; }
-    .card p { margin: 0; font-size: 0.875rem; color: #8c93a8; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: auto; }
+    .card h2 { margin: 0; font-size: 1.25rem; color: #00d2ff; overflow-wrap: anywhere; }
+    .source-btn { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 0.35rem; color: #e1e4ea; text-decoration: none; font-size: 0.8rem; font-weight: 500; background: #12151e; border: 1px solid #282c3c; border-radius: 6px; padding: 0.35rem 0.65rem; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+    .source-btn:hover { background: #232738; border-color: #478cbf; color: #00d2ff; }
 
     #iframe-container { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f1117; z-index: 9999; }
     #game-iframe { width: 100%; height: 100%; border: none; }
@@ -34,72 +38,152 @@
   </header>
   <div class="grid">
     
-    <a class="card" href="./air_hockey/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./air_hockey/screenshot.png" alt="air_hockey screenshot" onerror="this.style.display='none'" />
+    <div class="card">
+      <a class="card-link" href="./air_hockey/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./air_hockey/screenshot.png" alt="air_hockey screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>air_hockey</h2>
+        
       </div>
-      <h2>air_hockey</h2>
-    </a>
-    <a class="card" href="./asteroids_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./asteroids_3d/screenshot.png" alt="asteroids_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./asteroids_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./asteroids_3d/screenshot.png" alt="asteroids_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>asteroids_3d</h2>
+        
       </div>
-      <h2>asteroids_3d</h2>
-    </a>
-    <a class="card" href="./candy_crush_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./candy_crush_3d/screenshot.png" alt="candy_crush_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./candy_crush_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./candy_crush_3d/screenshot.png" alt="candy_crush_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>candy_crush_3d</h2>
+        
       </div>
-      <h2>candy_crush_3d</h2>
-    </a>
-    <a class="card" href="./fruit_fusion_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./fruit_fusion_3d/screenshot.png" alt="fruit_fusion_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./cyber_dojo_fighter/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./cyber_dojo_fighter/screenshot.png" alt="cyber_dojo_fighter screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>cyber_dojo_fighter</h2>
+        <a class="source-btn" href="https://iliagrigorevdev.github.io/scad-gltf/?file=https%3A%2F%2Filiagrigorevdev.github.io%2Fscad-godot%2Fcyber_dojo_fighter%2Fcyber_dojo_fighter.md" data-source-path="./cyber_dojo_fighter/cyber_dojo_fighter.md" target="_blank" rel="noopener noreferrer" title="Open source in Scadify">
+          <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M4.72 3.22a.75.75 0 0 1 1.06 1.06L2.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L.47 8.53a.75.75 0 0 1 0-1.06l4.25-4.25Zm6.56 0a.75.75 0 1 0-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 1 0 1.06 1.06l4.25-4.25a.75.75 0 0 0 0-1.06l-4.25-4.25Z"></path>
+          </svg>
+          Source
+        </a>
       </div>
-      <h2>fruit_fusion_3d</h2>
-    </a>
-    <a class="card" href="./horde_survivor_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./horde_survivor_3d/screenshot.png" alt="horde_survivor_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./fruit_fusion_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./fruit_fusion_3d/screenshot.png" alt="fruit_fusion_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>fruit_fusion_3d</h2>
+        
       </div>
-      <h2>horde_survivor_3d</h2>
-    </a>
-    <a class="card" href="./kids_digit_writing/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./kids_digit_writing/screenshot.png" alt="kids_digit_writing screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./horde_survivor_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./horde_survivor_3d/screenshot.png" alt="horde_survivor_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>horde_survivor_3d</h2>
+        
       </div>
-      <h2>kids_digit_writing</h2>
-    </a>
-    <a class="card" href="./naval_battle_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./naval_battle_3d/screenshot.png" alt="naval_battle_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./kids_digit_writing/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./kids_digit_writing/screenshot.png" alt="kids_digit_writing screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>kids_digit_writing</h2>
+        
       </div>
-      <h2>naval_battle_3d</h2>
-    </a>
-    <a class="card" href="./packman_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./packman_3d/screenshot.png" alt="packman_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./naval_battle_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./naval_battle_3d/screenshot.png" alt="naval_battle_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>naval_battle_3d</h2>
+        
       </div>
-      <h2>packman_3d</h2>
-    </a>
-    <a class="card" href="./sokoban_3d/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./sokoban_3d/screenshot.png" alt="sokoban_3d screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./packman_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./packman_3d/screenshot.png" alt="packman_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>packman_3d</h2>
+        
       </div>
-      <h2>sokoban_3d</h2>
-    </a>
-    <a class="card" href="./space_invaders/" onclick="openDemo(event, this.href)">
-      <div class="card-img-container">
-        <img src="./space_invaders/screenshot.png" alt="space_invaders screenshot" onerror="this.style.display='none'" />
+    </div>
+    <div class="card">
+      <a class="card-link" href="./sokoban_3d/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./sokoban_3d/screenshot.png" alt="sokoban_3d screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>sokoban_3d</h2>
+        
       </div>
-      <h2>space_invaders</h2>
-    </a>
+    </div>
+    <div class="card">
+      <a class="card-link" href="./space_invaders/" onclick="openDemo(event, this.href)">
+        <div class="card-img-container">
+          <img src="./space_invaders/screenshot.png" alt="space_invaders screenshot" onerror="this.style.display='none'" />
+        </div>
+      </a>
+      <div class="card-footer">
+        <h2>space_invaders</h2>
+        
+      </div>
+    </div>
   </div>
 
   <div id="iframe-container"></div>
 
   <script>
     const container = document.getElementById('iframe-container');
+    const scadifyBaseUrl = 'https://iliagrigorevdev.github.io/scad-gltf/';
+
+    if (window.location.protocol.startsWith('http')) {
+      const baseHref =
+        window.location.pathname.endsWith('/') ||
+        window.location.pathname.endsWith('.html')
+          ? window.location.href
+          : window.location.origin + window.location.pathname + '/';
+
+      document.querySelectorAll('.source-btn[data-source-path]').forEach((btn) => {
+        const fileUrl = new URL(btn.dataset.sourcePath, baseHref).href;
+        btn.href = scadifyBaseUrl + '?file=' + encodeURIComponent(fileUrl);
+      });
+    }
 
     function openDemo(e, url) {
       // Allow opening in new tabs via Ctrl/Cmd/Shift/Middle click natively
