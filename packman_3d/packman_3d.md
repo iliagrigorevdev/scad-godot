@@ -115,7 +115,6 @@ pointing/emulate_mouse_from_touch=true
 [rendering]
 
 anti_aliasing/quality/msaa_3d=2
-anti_aliasing/quality/screen_space_aa=1
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
 ```
 
