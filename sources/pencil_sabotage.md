@@ -2691,14 +2691,15 @@ var _hand_rest_pos: Vector3 = Vector3(0.24, -0.20, -0.38)
 
 var _touch_mode: bool = false
 var _aim_touch_idx: int = -1
+var _aim_last_pos: Vector2 = Vector2.ZERO
 var _throw_touch_idx: int = -1
 var _lean_left_idx: int = -1
 var _lean_right_idx: int = -1
+var _last_touch_msec: int = 0
 
 var _lean_left_ctrl: Control = null
 var _lean_right_ctrl: Control = null
 var _throw_ctrl: Control = null
-var _pause_ctrl: Control = null
 
 func _ready() -> void:
 	_touch_mode = DisplayServer.is_touchscreen_available()
@@ -2709,11 +2710,10 @@ func _ready() -> void:
 		hand_pivot.position = _hand_rest_pos
 		hand_pivot.rotation_degrees = Vector3(8.0, 12.0, -10.0)
 
-func setup_touch_controls(lean_left_ctrl: Control, lean_right_ctrl: Control, throw_ctrl: Control, pause_ctrl: Control) -> void:
+func setup_touch_controls(lean_left_ctrl: Control, lean_right_ctrl: Control, throw_ctrl: Control) -> void:
 	_lean_left_ctrl = lean_left_ctrl
 	_lean_right_ctrl = lean_right_ctrl
 	_throw_ctrl = throw_ctrl
-	_pause_ctrl = pause_ctrl
 
 func set_play_active(active: bool) -> void:
 	_can_play = active
@@ -2739,8 +2739,6 @@ func _enable_touch_mode() -> void:
 		touch_detected.emit()
 
 func _is_point_on_touch_ui(pos: Vector2) -> bool:
-	if _pause_ctrl and _pause_ctrl.visible and _pause_ctrl.get_global_rect().has_point(pos):
-		return true
 	if _throw_ctrl and _throw_ctrl.visible and _throw_ctrl.get_global_rect().has_point(pos):
 		return true
 	if _lean_left_ctrl and _lean_left_ctrl.visible and _lean_left_ctrl.get_global_rect().has_point(pos):
@@ -2749,8 +2747,12 @@ func _is_point_on_touch_ui(pos: Vector2) -> bool:
 		return true
 	return false
 
+func _has_active_touch() -> bool:
+	return _aim_touch_idx != -1 or _throw_touch_idx != -1 or _lean_left_idx != -1 or _lean_right_idx != -1
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		_last_touch_msec = Time.get_ticks_msec()
 		_enable_touch_mode()
 
 	if not _can_play:
@@ -2759,9 +2761,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var st := event as InputEventScreenTouch
 		if st.pressed:
-			if _pause_ctrl and _pause_ctrl.visible and _pause_ctrl.get_global_rect().has_point(st.position):
-				return
-			elif _throw_ctrl and _throw_ctrl.is_visible_in_tree() and _throw_ctrl.get_global_rect().has_point(st.position):
+			if _throw_ctrl and _throw_ctrl.is_visible_in_tree() and _throw_ctrl.get_global_rect().has_point(st.position):
 				if _throw_touch_idx == -1:
 					_throw_touch_idx = st.index
 					if _reload_timer <= 0.0:
@@ -2776,6 +2776,7 @@ func _input(event: InputEvent) -> void:
 			else:
 				if _aim_touch_idx == -1:
 					_aim_touch_idx = st.index
+					_aim_last_pos = st.position
 		else:
 			if st.index == _throw_touch_idx:
 				_throw_touch_idx = -1
@@ -2792,16 +2793,21 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
 		var sd := event as InputEventScreenDrag
 		if sd.index == _aim_touch_idx:
-			_yaw = clampf(_yaw - sd.relative.x * touch_sensitivity, -0.68, 0.68)
-			_pitch = clampf(_pitch - sd.relative.y * touch_sensitivity, -0.35, 0.50)
+			var drag_delta := sd.position - _aim_last_pos
+			_aim_last_pos = sd.position
+			if drag_delta.length_squared() < 200.0 * 200.0:
+				_yaw = clampf(_yaw - drag_delta.x * touch_sensitivity, -0.68, 0.68)
+				_pitch = clampf(_pitch - drag_delta.y * touch_sensitivity, -0.35, 0.50)
 		return
 
-	# Allow 2-in-1 desktop users with a physical mouse to seamlessly switch back to mouse mode
+	# Allow 2-in-1 desktop users with a physical mouse to seamlessly switch back to mouse mode,
+	# while ignoring browser-synthesized mouse events emitted during/right after touch input.
 	if _touch_mode and event is InputEventMouseButton and event.device >= 0:
-		var mb_check := event as InputEventMouseButton
-		if mb_check.pressed and not _is_point_on_touch_ui(mb_check.position):
-			_touch_mode = false
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		if not _has_active_touch() and (Time.get_ticks_msec() - _last_touch_msec) > 2000:
+			var mb_check := event as InputEventMouseButton
+			if mb_check.pressed and mb_check.button_index == MOUSE_BUTTON_LEFT and not _is_point_on_touch_ui(mb_check.position):
+				_touch_mode = false
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _can_play or _touch_mode:
@@ -2809,8 +2815,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var mm := event as InputEventMouseMotion
-		_yaw = clampf(_yaw - mm.relative.x * mouse_sensitivity, -0.68, 0.68)
-		_pitch = clampf(_pitch - mm.relative.y * mouse_sensitivity, -0.35, 0.50)
+		if mm.relative.length_squared() < 250.0 * 250.0:
+			_yaw = clampf(_yaw - mm.relative.x * mouse_sensitivity, -0.68, 0.68)
+			_pitch = clampf(_pitch - mm.relative.y * mouse_sensitivity, -0.35, 0.50)
 
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
@@ -2944,7 +2951,6 @@ extends Node3D
 @onready var end_desc: Label = $HUD/EndOverlay/Panel/VBox/EndDesc
 @onready var restart_button: Button = $HUD/EndOverlay/Panel/VBox/RestartButton
 @onready var pause_overlay: Control = $HUD/PauseOverlay
-@onready var pause_button: Button = $HUD/PauseButton
 @onready var touch_controls: Control = $HUD/TouchControls
 @onready var lean_left_btn: Control = $HUD/TouchControls/LeanLeftBtn
 @onready var lean_right_btn: Control = $HUD/TouchControls/LeanRightBtn
@@ -2974,7 +2980,7 @@ func _ready() -> void:
 	pc_target.armor_ricochet.connect(_on_pc_armor_ricochet)
 	player_couch.pencil_thrown.connect(_on_pencil_thrown)
 	player_couch.touch_detected.connect(_enable_touch_mode)
-	player_couch.setup_touch_controls(lean_left_btn, lean_right_btn, throw_btn, pause_button)
+	player_couch.setup_touch_controls(lean_left_btn, lean_right_btn, throw_btn)
 	gamer_npc.look_back_warning.connect(_on_gamer_look_back_warning)
 	gamer_npc.look_back_started.connect(_on_gamer_look_back)
 	gamer_npc.look_back_ended.connect(_on_gamer_back_to_game)
@@ -3148,13 +3154,6 @@ func _process(delta: float) -> void:
 	else:
 		crosshair_dot.color = Color(1.0, 0.95, 0.35)
 
-func _input(event: InputEvent) -> void:
-	if _game_state == "playing" and event is InputEventScreenTouch:
-		var st := event as InputEventScreenTouch
-		if st.pressed and pause_button.visible and pause_button.get_global_rect().has_point(st.position):
-			_set_paused(true)
-			get_viewport().set_input_as_handled()
-
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		if _game_state == "playing":
@@ -3174,7 +3173,6 @@ func _enable_touch_mode() -> void:
 	start_desc.text = "You're sitting on the sofa. Across the room is an open,\nrunning PC with a gamer totally absorbed in their game.\n\nThrow pencils into the exposed PC parts (CPU Cooler, GPU,\nRAM Sticks, PSU) to short-circuit and crash the system!\nDon't hit the gamer, and hold fire when he looks back.\n\nControls:\n• Drag screen — Aim\n• Hold & release THROW — Charge & throw pencil\n• < / > — Lean left/right on the sofa for a better angle"
 	restart_button.text = "PLAY AGAIN"
 	touch_controls.visible = (_game_state == "playing")
-	pause_button.visible = (_game_state == "playing")
 	_update_hud()
 
 func _show_menu() -> void:
@@ -3190,7 +3188,6 @@ func _show_menu() -> void:
 	end_overlay.modulate.a = 1.0
 	pause_overlay.visible = false
 	touch_controls.visible = false
-	pause_button.visible = false
 	charge_bar.visible = false
 	crosshair_dot.visible = false
 	_update_hud()
@@ -3226,7 +3223,6 @@ func start_new_game() -> void:
 	pause_overlay.visible = false
 	_game_state = "playing"
 	touch_controls.visible = _is_touch_mode
-	pause_button.visible = _is_touch_mode
 	crosshair_dot.visible = true
 	player_couch.set_play_active(true)
 	_show_feed("Goal: Disable the open PC!", Color(0.5, 0.9, 1.0))
@@ -3238,7 +3234,6 @@ func _set_paused(paused: bool) -> void:
 		gamer_npc.set_active(false)
 		pause_overlay.visible = true
 		touch_controls.visible = false
-		pause_button.visible = false
 		charge_bar.visible = false
 		crosshair_dot.visible = false
 		player_couch.set_play_active(false)
@@ -3247,7 +3242,6 @@ func _set_paused(paused: bool) -> void:
 		gamer_npc.set_active(true)
 		pause_overlay.visible = false
 		touch_controls.visible = _is_touch_mode
-		pause_button.visible = _is_touch_mode
 		crosshair_dot.visible = true
 		player_couch.set_play_active(true)
 
@@ -3365,7 +3359,6 @@ func _on_gamer_back_to_game() -> void:
 func _trigger_victory() -> void:
 	_game_state = "won"
 	touch_controls.visible = false
-	pause_button.visible = false
 	charge_bar.visible = false
 	crosshair_dot.visible = false
 	player_couch.set_play_active(false)
@@ -3387,7 +3380,6 @@ func _trigger_victory() -> void:
 func _trigger_defeat() -> void:
 	_game_state = "lost"
 	touch_controls.visible = false
-	pause_button.visible = false
 	charge_bar.visible = false
 	crosshair_dot.visible = false
 	player_couch.set_play_active(false)
@@ -3445,10 +3437,6 @@ func _on_restart_button_pressed() -> void:
 
 func _on_resume_button_pressed() -> void:
 	_set_paused(false)
-
-func _on_pause_button_pressed() -> void:
-	if _game_state == "playing":
-		_set_paused(true)
 ```
 
 ### pencil_sabotage/scenes/pencil_projectile.tscn
@@ -3783,19 +3771,6 @@ text = "THROW"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PauseButton" type="Button" parent="HUD"]
-visible = false
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -76.0
-offset_top = 132.0
-offset_right = -20.0
-offset_bottom = 176.0
-grow_horizontal = 0
-theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
-text = "||"
 
 [node name="StartOverlay" type="ColorRect" parent="HUD"]
 anchors_preset = 15
@@ -3949,7 +3924,6 @@ text = "RESTART"
 [connection signal="pressed" from="HUD/EndOverlay/Panel/VBox/RestartButton" to="." method="_on_restart_button_pressed"]
 [connection signal="pressed" from="HUD/PauseOverlay/Panel/VBox/ResumeButton" to="." method="_on_resume_button_pressed"]
 [connection signal="pressed" from="HUD/PauseOverlay/Panel/VBox/RestartButton" to="." method="_on_restart_button_pressed"]
-[connection signal="pressed" from="HUD/PauseButton" to="." method="_on_pause_button_pressed"]
 ```
 
 ### pencil_sabotage/shaders/rug_pattern.gdshader
